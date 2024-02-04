@@ -5,6 +5,8 @@ const telegramService = require("../services/telegramService");
 
 class ProductService {
   async createProduct(data) {
+    console.log(data, "DATA");
+
     const product = await Product.create(data);
 
     await this.sendNotification(product);
@@ -57,7 +59,25 @@ class ProductService {
     //     products = await Product.find(query).lean();
     // }
 
-    const features = new APIFeatures(Product.find(filter), req.query)
+    if (queryStr.q && queryStr.q?.length > 2) {
+      const regex = new RegExp(queryStr.q, "i");
+
+      const products = await Product.find({
+        $or: [
+          { name: { $regex: regex } },
+          { kind: { $regex: regex } },
+          { type: { $regex: regex } },
+          { occasion: { $regex: regex } },
+          { made: { $regex: regex } },
+        ],
+      }).lean();
+
+      return products;
+    }
+
+    const filter = {};
+
+    const features = new APIFeatures(Product.find(filter), queryStr)
       .filters()
       .sort()
       .limitfields()
