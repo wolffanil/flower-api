@@ -1,7 +1,8 @@
-const Product = require("../models/productModel");
 const AppError = require("../utils/AppError");
+const Product = require("../models/productModel");
 const APIFeatures = require("../utils/apiFeatures");
 const telegramService = require("../services/telegramService");
+const Cart = require("../models/cartModel");
 
 class ProductService {
   async createProduct(data) {
@@ -25,39 +26,25 @@ class ProductService {
   }
 
   async getAllProducts(queryStr) {
-    // let query = {};
+    if (queryStr.q && queryStr.q?.length > 2) {
+      const regex = new RegExp(queryStr.q, "i");
 
-    // if (queryStr.type) {
-    //     query.type = queryStr.type;
-    // }
+      const products = await Product.find({
+        $or: [
+          { name: { $regex: regex } },
+          { kind: { $regex: regex } },
+          { type: { $regex: regex } },
+          { occasion: { $regex: regex } },
+          { made: { $regex: regex } },
+        ],
+      }).lean();
 
-    // if (queryStr.kind) {
-    //     query.kind = queryStr.kind;
-    // }
+      return products;
+    }
 
-    // if (queryStr.occasion) {
-    //     query.occasion = queryStr.occasion;
-    // }
+    const filter = {};
 
-    // if (queryStr.priceMin && queryStr.priceMax) {
-    //     query.price = { $gte: queryStr.priceMin, $lte: queryStr.priceMax};
-    // } else if (queryStr.priceMin) {
-    //     query.price = { $gte: queryStr.priceMin}
-    // } else if (queryStr.priceMax) {
-    //     query.price = { $lte: queryStr.priceMax};
-    // }
-
-    // let products = [];
-
-    // if( queryStr.limit) {
-
-    //     products = await Product.find(query).limit(Number(queryStr.limit)).sort({ createAt: -1}).lean();
-
-    // } else {
-    //     products = await Product.find(query).lean();
-    // }
-
-    const features = new APIFeatures(Product.find(filter), req.query)
+    const features = new APIFeatures(Product.find(filter), queryStr)
       .filters()
       .sort()
       .limitfields()
@@ -69,7 +56,34 @@ class ProductService {
   }
 
   async deleteProductById(productId) {
-    await Product.findByIdAndDelete(productId);
+    const productB = await Product.findByIdAndDelete(productId);
+
+    if (!productB) {
+      return next(new AppError("продукт не был найденн", 404));
+    }
+
+    const carts = await Cart.find({ "items.product": productB._id });
+
+    if (!carts) {
+      return;
+    }
+
+    // Обновляем каждую корзину
+    for (const cart of carts) {
+      const product = cart.items.find(
+        (item) => item.product.toString() === productB._id.toString()
+      );
+
+      if (product) {
+        if (cart.status !== "cart") {
+          console.log(product, "PR");
+          const totalPrice = productB.price * product.quantity;
+          cart.priceFinall -= totalPrice;
+        }
+        cart.items.pull({ product: productB._id });
+        await cart.save();
+      }
+    }
   }
 
   async findProductById(productId, next) {
@@ -91,6 +105,23 @@ class ProductService {
     );
 
     const msg = `<b>${data.name}</b>`;
+
+    if (process.env.NODE_ENV !== "development") {
+      await telegramService.sendMessage(msg, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                url: `${process.env.CLIENT_URL}/flower/${data._id}`,
+                text: "Go to buy",
+              },
+            ],
+          ],
+        },
+      });
+
+      return;
+    }
 
     await telegramService.sendMessage(msg, {
       reply_markup: {

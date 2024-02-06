@@ -58,15 +58,13 @@ class AuthController {
       ),
       httpOnly: true,
       secure: req.secure || req.headers["x-forwarded-proto"] === "https",
-      sameSite: 'none'
+      // sameSite: "none",
     });
-
-
 
     userData.user.password = undefined;
     userData.refreshToken = undefined;
 
-    res.status(statusCode).json({userData});
+    res.status(statusCode).json({ userData });
   };
 }
 

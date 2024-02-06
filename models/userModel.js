@@ -1,62 +1,65 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const validator = require('validator');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const validator = require("validator");
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     name: {
-       type: String, 
-      //  required: true 
-      },
-    surname: { 
-      type: String, 
-      // required: true 
+      type: String,
+      //  required: true
     },
-    patronymic: { 
-      type: String 
+    surname: {
+      type: String,
+      // required: true
     },
-    login: { 
-      type: String, 
-      required: true, 
-      unique: true, 
-      index: true
+    patronymic: {
+      type: String,
     },
-    email: { 
-      type: String, 
-      required: true, 
-      unique: true, 
+    login: {
+      type: String,
+      required: true,
+      unique: true,
       index: true,
-      validate: [validator.isEmail, 'пожалуйста введите коректный email']  
     },
-    password: { 
-      type: String, 
-      required: true 
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      validate: [validator.isEmail, "пожалуйста введите коректный email"],
     },
-    role: { 
-      type: String, 
-      enum: ['admin', 'client'], 
-      required: true, 
-      default: 'client' 
-    }
-
-}, {
-    timestamps: true
-});
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ["admin", "client"],
+      required: true,
+      default: "client",
+    },
+    comment: String,
+  },
+  {
+    timestamps: true,
+  }
+);
 
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
-  
-    this.password = await bcrypt.hash(this.password, 10);
-  
-    next();
-});
-  
-  userSchema.methods.correctPassword = async function (
-    candidatePassword,
-    userPassword
-  ) {
-    return await bcrypt.compare(candidatePassword, userPassword);
-  };
+  if (!this.isModified("password")) return next();
 
-const User = mongoose.model('User', userSchema);
+  this.password = await bcrypt.hash(this.password, 10);
+
+  next();
+});
+
+userSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;
