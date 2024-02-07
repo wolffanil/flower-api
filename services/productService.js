@@ -50,6 +50,10 @@ class ProductService {
       .limitfields()
       .page();
 
+    if (queryStr.likes) {
+      features.query.sort({ "likes.length": -1 });
+    }
+
     const products = await features.query;
 
     return products;
@@ -76,7 +80,6 @@ class ProductService {
 
       if (product) {
         if (cart.status !== "cart") {
-          console.log(product, "PR");
           const totalPrice = productB.price * product.quantity;
           cart.priceFinall -= totalPrice;
         }
@@ -113,7 +116,7 @@ class ProductService {
             [
               {
                 url: `${process.env.CLIENT_URL}/flower/${data._id}`,
-                text: "Go to buy",
+                text: "Купить",
               },
             ],
           ],
@@ -129,7 +132,7 @@ class ProductService {
           [
             {
               url: "https://megacvet24.ru/tsvety/tyulpany/101-krasnyy-tyulpan-v-plenke.html",
-              text: "Go to buy",
+              text: "Купить",
             },
           ],
         ],

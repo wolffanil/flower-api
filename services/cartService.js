@@ -2,12 +2,12 @@ const AppError = require("../utils/AppError");
 const Cart = require("../models/cartModel");
 const Product = require("../models/productModel");
 const APIFeatures = require("../utils/apiFeatures");
+const User = require("../models/userModel");
+const bcrypt = require("bcryptjs");
 
 class CartService {
   async confirmedCart(cartId, next) {
     const cart = await Cart.findById(cartId);
-
-    console.log(cart, "cart");
 
     if (cart && cart.status !== "confirmed") {
       cart.status = "confirmed";
@@ -17,7 +17,6 @@ class CartService {
       for (const item of cart.items) {
         const product = await Product.findById(item.product);
         if (product) {
-          product.likes++;
           await product.save();
         }
       }
@@ -129,11 +128,11 @@ class CartService {
         .lean();
     } else {
       carts = await Cart.find({ status: { $ne: "cart" }, user: userId })
-        .sort({ createAt: -1 })
         .populate({
           path: "items.product",
           select: "_id imageUrl",
         })
+        .sort({ createAt: -1 })
         .lean();
     }
 
@@ -233,6 +232,19 @@ class CartService {
   }
 
   async checkoutCart(userId, geo, next) {
+    if (!geo.password) {
+      return next(new AppError("Пароля нету", 400));
+    }
+
+    console.log(geo.password, "password");
+
+    const user = await User.findById(userId);
+
+    const confirmed = await user.correctPassword(geo.password, user.password);
+    if (!confirmed) {
+      return next(new AppError("Неверный пароль", 400));
+    }
+
     const cart = await Cart.findOne({ user: userId, status: "cart" }).populate(
       "items.product"
     );

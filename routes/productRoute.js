@@ -3,6 +3,7 @@ const productController = require("../controllers/productController");
 
 const protect = require("../middlewares/authMiddleware");
 const isAdmin = require("../middlewares/adminMiddleware");
+const { createLike, deleteLike } = require("../controllers/likeController");
 
 const router = express.Router();
 
@@ -18,5 +19,9 @@ router
   .get(productController.getProductById)
   .patch(protect, isAdmin, productController.updateProduct)
   .delete(protect, isAdmin, productController.deleteProduct);
+
+router.post("/like", protect, createLike);
+
+router.delete("/:productId/unlike", protect, deleteLike);
 
 module.exports = router;

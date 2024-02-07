@@ -29,10 +29,14 @@ const productSchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
-  likes: {
-    type: Number,
-    default: 0,
-  },
+  likes: [
+    {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    },
+  ],
 });
 
 const Product = mongoose.model("Product", productSchema);
