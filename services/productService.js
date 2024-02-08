@@ -6,7 +6,9 @@ const Cart = require("../models/cartModel");
 
 class ProductService {
   async createProduct(data) {
-    const product = await Product.create(data);
+    const product = await Product.create({
+      ...data,
+    });
 
     await this.sendNotification(product);
 
@@ -100,12 +102,13 @@ class ProductService {
   }
 
   async sendNotification(data) {
-    if (process.env.NODE_ENV !== "development")
+    if (process.env.NODE_ENV !== "development") {
       await telegramService.sendPhoto(data.imageUrl);
-
-    await telegramService.sendPhoto(
-      "https://images.fanart.tv/fanart/john-wick-5cdaceaf4e0a7.jpg"
-    );
+    } else {
+      await telegramService.sendPhoto(
+        "https://images.fanart.tv/fanart/john-wick-5cdaceaf4e0a7.jpg"
+      );
+    }
 
     const msg = `<b>${data.name}</b>`;
 
