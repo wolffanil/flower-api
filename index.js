@@ -6,6 +6,10 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const Fingerprint = require("express-fingerprint");
+const compression = require("compression");
+const xss = require("xss-clean");
+const mongoSanitize = require("express-mongo-sanitize");
+
 const AppError = require("./utils/AppError");
 
 const globalError = require("./controllers/errorController");
@@ -18,7 +22,7 @@ const commentRoute = require("./routes/commentRoute");
 const app = express();
 dotenv.config();
 
-// app.enable("trust proxy");
+app.enable("trust proxy");
 
 app.use(
   cors({
@@ -42,8 +46,14 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
+
+app.use(mongoSanitize());
+
+app.use(xss());
+
+app.use(compression());
 
 app.get("/favicon.ico", (req, res) => {
   res.status(204);

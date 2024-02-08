@@ -7,6 +7,8 @@ class LikeController {
     const userId = req.user.id;
     const productId = req.body.productId;
 
+    console.log(productId, "pros")
+
     const product = await Product.findById(productId);
 
     if (!product) {
@@ -14,7 +16,7 @@ class LikeController {
     }
 
     const existingLike = product.likes.find((like) =>
-      like.userId.equals(userId)
+      like.userId === userId
     );
 
     if (existingLike) {
@@ -39,7 +41,7 @@ class LikeController {
       return next(new AppError("Товар не был найден", 404));
     }
 
-    product.likes = product.likes.filter((like) => !like.userId.equals(userId));
+    product.likes = product.likes.filter((like) => !like.userId === userId);
 
     await product.save();
 

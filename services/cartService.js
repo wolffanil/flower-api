@@ -130,7 +130,7 @@ class CartService {
       carts = await Cart.find({ status: { $ne: "cart" }, user: userId })
         .populate({
           path: "items.product",
-          select: "_id imageUrl",
+          select: "_id imageUrl likes",
         })
         .sort({ createAt: -1 })
         .lean();

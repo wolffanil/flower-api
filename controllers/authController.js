@@ -42,6 +42,8 @@ class AuthController {
 
     const { refreshToken } = req.cookies;
 
+    console.log(refreshToken, "TOKEN");
+
     const userData = await authService.refresh({
       refreshToken,
       fingerprint,
@@ -58,7 +60,7 @@ class AuthController {
       ),
       httpOnly: true,
       secure: req.secure || req.headers["x-forwarded-proto"] === "https",
-      // sameSite: "none",
+      sameSite: "none",
     });
 
     userData.user.password = undefined;
