@@ -42,8 +42,6 @@ class AuthController {
 
     const { refreshToken } = req.cookies;
 
-    console.log(refreshToken, "TOKEN");
-
     const userData = await authService.refresh({
       refreshToken,
       fingerprint,
