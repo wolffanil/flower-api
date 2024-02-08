@@ -7,7 +7,6 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 const Fingerprint = require("express-fingerprint");
 const compression = require("compression");
-const xss = require("xss-clean");
 const mongoSanitize = require("express-mongo-sanitize");
 
 const AppError = require("./utils/AppError");
@@ -50,8 +49,6 @@ app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 
 app.use(mongoSanitize());
-
-app.use(xss());
 
 app.use(compression());
 
